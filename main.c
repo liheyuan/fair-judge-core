@@ -16,16 +16,37 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <pthread.h>
 
 #define EXIT_FORK 2;
 #define EXIT_SET_LIMIT 3;
 #define EXIT_EXEC_FAIL 4;
 
+struct timeout_killer_args
+{
+    pid_t pid;
+    int timeout;
+};
+
+
+void timeout_killer(struct timeout_killer_args *args)
+{
+    if (args == NULL)
+    {
+        return;
+    }
+    // sleep for timeout + 1 seconds
+    sleep(args->timeout + 1);
+    if(kill(args->pid, SIGKILL) != 0) {
+        return;
+    }
+}
 
 int main()
 {
-    int timeLimitSec = 1;
-    int ramLimitMB = 1;
+    int cpuTimeLimitSec = 1;
+    int realTimeLimitSec = 1;
+    int ramLimitMB = 18;
     int fileLimitMB = 16;
 
     int s;
@@ -48,7 +69,7 @@ int main()
         getrlimit(RLIMIT_FSIZE, &fLimit);
 
         // set cpu / memory / file size
-        tLimit.rlim_cur = tLimit.rlim_max = timeLimitSec; // only works if cpu 100% run for x seconds
+        tLimit.rlim_cur = tLimit.rlim_max = cpuTimeLimitSec; // only works if cpu 100% run for x seconds
         if (setrlimit(RLIMIT_CPU, &tLimit) != 0)
         {
             printf("set time limit fail\n");
@@ -67,7 +88,13 @@ int main()
             return EXIT_SET_LIMIT;
         }
 
-        if (execl("/usr/bin/yes", "yes", NULL) < 0) {
+        // test for cpu timeout
+        // if (execl("/usr/bin/yes", "yes", NULL) < 0) {
+        //     printf("execl fail: %s\n", strerror(errno));
+        //     return EXIT_EXEC_FAIL;
+        // }
+        // test for real timeout
+        if (execl("/usr/bin/sleep", "sleep", "9",NULL) < 0) {
             printf("execl fail: %s\n", strerror(errno));
             return EXIT_EXEC_FAIL;
         }
@@ -75,6 +102,15 @@ int main()
     }
     else
     {
+        // parent process
+
+        // create a thread to monitor child process , after realTimeLimitSec, kill child process
+        pthread_t tid;
+        struct timeout_killer_args kill_arg = {pid, realTimeLimitSec};
+        pthread_create(&tid, NULL, (void *)timeout_killer, (void *)&kill_arg);
+        pthread_detach(tid);
+
+        // wait for child process exit
         waitpid(pid, &s, 0);
         if (WIFEXITED(s))
         {
