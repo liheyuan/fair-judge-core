@@ -18,13 +18,11 @@
 #include <signal.h>
 #include <pthread.h>
 
-#define EXIT_FORK 2;
-#define EXIT_SET_LIMIT 3;
+#define EXIT_FORK_FAIL 2;
+#define EXIT_SET_LIMIT_FAIL 3;
 #define EXIT_EXEC_FAIL 4;
-#define EXIT_INPUT_OPEN_FAIL 5;
-#define EXIT_INPUT_DUP_FAIL 6;
-#define EXIT_OUTPUT_OPEN_FAIL 7;
-#define EXIT_OUTPUT_DUP_FAIL 8;
+#define EXIT_REDIRECT_FAIL 5;
+#define EXIT_CHROOT_FAIL 6;
 
 struct timeout_killer_args
 {
@@ -52,7 +50,7 @@ int main()
     int cpuTimeLimitSec = 1;
     int realTimeLimitSec = 1;
     int ramLimitMB = 18;
-    int fileLimitMB = 1;
+    int fileLimitMB = 32;
     char* inputFile = "input.txt";
     char* outputFile = "output.txt";
 
@@ -63,7 +61,7 @@ int main()
     if ((pid = fork()) < 0)
     {
         printf("fork fail\n");
-        return EXIT_FORK;
+        return EXIT_FORK_FAIL;
     }
     else if (pid == 0)
     {
@@ -75,48 +73,49 @@ int main()
         getrlimit(RLIMIT_AS, &mLimit);
         getrlimit(RLIMIT_FSIZE, &fLimit);
 
-        // set cpu / memory / file size
+        // set cpu time limit (will SIGKILL(9) if exceed)
         tLimit.rlim_cur = tLimit.rlim_max = cpuTimeLimitSec; // only works if cpu 100% run for x seconds
         if (setrlimit(RLIMIT_CPU, &tLimit) != 0)
         {
             printf("set time limit fail\n");
-            return EXIT_SET_LIMIT;
+            return EXIT_SET_LIMIT_FAIL;
         }
+        // set memory limit (will SIGSEGV(11) if exceed
         mLimit.rlim_cur = mLimit.rlim_max = ramLimitMB * 1024 * 1024;
         if (setrlimit(RLIMIT_AS, &mLimit) != 0)
         {
             printf("set memory limit fail\n");
-            return EXIT_SET_LIMIT;
+            return EXIT_SET_LIMIT_FAIL;
         }
+        // set file size limit (will SIGXFSZ(25) if exceed)
         fLimit.rlim_cur = fileLimitMB * 1024 * 1024;
         if (setrlimit(RLIMIT_FSIZE, &fLimit) == -1)
         {
             printf("set file size limit fail\n");
-            return EXIT_SET_LIMIT;
+            return EXIT_SET_LIMIT_FAIL;
         }
 
         // redirect inputFile to stdin
         FILE* fpIn = fopen(inputFile, "r");
         if (fpIn == NULL)
         {
-            return EXIT_INPUT_OPEN_FAIL;
+            return EXIT_REDIRECT_FAIL;
         }
         if (dup2(fileno(fpIn), STDIN_FILENO) == -1)
         {
-            return EXIT_INPUT_DUP_FAIL;
+            return EXIT_REDIRECT_FAIL;
         }
 
         // redirect stdout to outputFile
         FILE *fpOut = fopen(outputFile, "w");
         if (fpOut == NULL)
         {
-            return EXIT_OUTPUT_OPEN_FAIL;
+            return EXIT_REDIRECT_FAIL;
         }
         if (dup2(fileno(fpOut), STDOUT_FILENO) == -1)
         {
-            return EXIT_OUTPUT_DUP_FAIL;
+            return EXIT_REDIRECT_FAIL;
         }
-
 
         // test for cpu timeout
         // if (execl("/usr/bin/yes", "yes", NULL) < 0) {
