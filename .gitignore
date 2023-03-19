@@ -1,2 +1,6 @@
 main
 .vscode
+*/*.o
+fjcore
+input.txt
+output.txt

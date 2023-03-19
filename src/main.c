@@ -21,6 +21,10 @@
 #define EXIT_FORK 2;
 #define EXIT_SET_LIMIT 3;
 #define EXIT_EXEC_FAIL 4;
+#define EXIT_INPUT_OPEN_FAIL 5;
+#define EXIT_INPUT_DUP_FAIL 6;
+#define EXIT_OUTPUT_OPEN_FAIL 7;
+#define EXIT_OUTPUT_DUP_FAIL 8;
 
 struct timeout_killer_args
 {
@@ -44,10 +48,13 @@ void timeout_killer(struct timeout_killer_args *args)
 
 int main()
 {
+    // test args
     int cpuTimeLimitSec = 1;
     int realTimeLimitSec = 1;
     int ramLimitMB = 18;
-    int fileLimitMB = 16;
+    int fileLimitMB = 1;
+    char* inputFile = "input.txt";
+    char* outputFile = "output.txt";
 
     int s;
 
@@ -88,17 +95,44 @@ int main()
             return EXIT_SET_LIMIT;
         }
 
+        // redirect inputFile to stdin
+        FILE* fpIn = fopen(inputFile, "r");
+        if (fpIn == NULL)
+        {
+            return EXIT_INPUT_OPEN_FAIL;
+        }
+        if (dup2(fileno(fpIn), STDIN_FILENO) == -1)
+        {
+            return EXIT_INPUT_DUP_FAIL;
+        }
+
+        // redirect stdout to outputFile
+        FILE *fpOut = fopen(outputFile, "w");
+        if (fpOut == NULL)
+        {
+            return EXIT_OUTPUT_OPEN_FAIL;
+        }
+        if (dup2(fileno(fpOut), STDOUT_FILENO) == -1)
+        {
+            return EXIT_OUTPUT_DUP_FAIL;
+        }
+
+
         // test for cpu timeout
         // if (execl("/usr/bin/yes", "yes", NULL) < 0) {
         //     printf("execl fail: %s\n", strerror(errno));
         //     return EXIT_EXEC_FAIL;
         // }
         // test for real timeout
-        if (execl("/usr/bin/sleep", "sleep", "9",NULL) < 0) {
+        // if (execl("/usr/bin/sleep", "sleep", "9",NULL) < 0) {
+        //     printf("execl fail: %s\n", strerror(errno));
+        //     return EXIT_EXEC_FAIL;
+        // }
+        // test for input / output
+        if (execl("/usr/bin/cat", "cat", NULL) < 0) {
             printf("execl fail: %s\n", strerror(errno));
             return EXIT_EXEC_FAIL;
         }
-        printf("child process\n");
     }
     else
     {

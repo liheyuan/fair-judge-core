@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -g -O2 -pthread
 LDFLAGS = -lpthread
-TARGET = fail-judge-core
+TARGET = fjcore
 SRCS = $(wildcard src/*.c)
 OBJS = $(SRCS:.c=.o)
 $(TARGET): $(OBJS)
