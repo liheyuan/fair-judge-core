@@ -22,6 +22,7 @@ struct fj_timeout_args
 #define EXIT_REDIRECT_FAIL 5;
 #define EXIT_CHROOT_FAIL 6;
 
+#define ERR_OK 0;
 #define ERR_CHILD_EXIT_NONZERO 101;
 #define ERR_CHILD_EXIT_ABNORMALLY 102;
 #define ERR_MEMORY_LIMIT_EXCEED 103;

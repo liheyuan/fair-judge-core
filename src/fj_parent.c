@@ -48,8 +48,8 @@ int run_parent(struct fj_config *config, int child_pid)
     double childRealTimeInMs = (end.tv_sec - start.tv_sec) * 1000 + (float)(end.tv_usec - start.tv_usec) / 1000;
 
     // check child process exit status
-    int err_code = 0;
-    char err_msg[1024];
+    int err_code = ERR_OK;
+    char err_msg[1024] = {0};
     if (WIFEXITED(s))
     {
         printf("exit normally code: %d.\n", WEXITSTATUS(s));
