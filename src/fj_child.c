@@ -15,10 +15,8 @@
 
 #include "fj_child.h"
 
-
-int run_child(struct fj_config *config)
+int set_limit(struct fj_config* config)
 {
-
     // get cpu / memory / file size
     struct rlimit tLimit, mLimit, fLimit;
     getrlimit(RLIMIT_CPU, &tLimit);
@@ -46,7 +44,11 @@ int run_child(struct fj_config *config)
         printf("set file size limit fail\n");
         return EXIT_SET_LIMIT_FAIL;
     }
+    return 0;
+}
 
+int redirect_io(struct fj_config* config)
+{
     // redirect inputFile to stdin
     FILE *fpIn = fopen(config->inputFile, "r");
     if (fpIn == NULL)
@@ -68,6 +70,26 @@ int run_child(struct fj_config *config)
     {
         return EXIT_REDIRECT_FAIL;
     }
+    return 0;
+}
+
+int run_child(struct fj_config *config)
+{
+    // set limit
+    int ret = set_limit(config);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    // redirect io
+    ret = redirect_io(config);
+    if (ret != 0)
+    {
+        return ret;
+    }
+
+    // run command
 
     // test for cpu timeout
     // if (execl("/usr/bin/yes", "yes", NULL) < 0) {
