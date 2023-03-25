@@ -39,19 +39,18 @@ int compare_files(char *file1, char * file2) {
         if (strcmp(buf1, buf2) != 0) {
             fclose(fp1);
             fclose(fp2);
-            return -1;
+            return -2;
         }
     }
     if (fgets(buf1, MAX_STR_LEN, fp1) != NULL || fgets(buf2, MAX_STR_LEN, fp2) != NULL) {
         fclose(fp1);
         fclose(fp2);
-        return -1;
+        return -2;
     }
     fclose(fp1);
     fclose(fp2);
     return 0;
 }
-
 
 int run_parent(struct fj_config *config, int child_pid)
 {
