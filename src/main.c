@@ -11,10 +11,17 @@
 void print_usage() {
     printf("Usage:\n");
     printf("fjcore -p <abs_path_bin> -c <bin_full_cmd> -i <input_file> -o <output_file> -a <answer_file, skip check if not provided>");
-    printf("-t <time_limit_sec, default 1> -m <mem_limit_mb, default 8> -f <file_limit_mb, default 16>\n");
+    printf("-t <time_limit_sec, default 1> -m <mem_limit_mb, default 8> -f <file_limit_mb, default 16>\n\n");
     
-    printf("Example:\n");
-    printf("fjcore -p /usr/bin/sleep -c \"sleep 9\" -i ./input.txt -o ./output.txt -t 2\n");
+    printf("Example (AC):\n");
+    printf("fjcore -p /usr/bin/cat -c \"cat\" -i ./input.txt -o ./output.txt -a ./answer.txt\n\n");
+
+    printf("Example (WA):\n");
+    printf("fjcore -p /usr/bin/sleep -c \"sleep 1\" -i ./input.txt -o ./output.txt -a ./answer.txt -t 2\n\n");
+
+    printf("Example (TLE):\n");
+    printf("fjcore -p /usr/bin/sleep -c \"sleep 2\" -i ./input.txt -o ./output.txt -a ./answer.txt\n\n");
+
 }
 
 int parse_config(int argc, char **argv, struct fj_config *config)

@@ -49,7 +49,6 @@ int compare_files(char *file1, char * file2) {
     }
     fclose(fp1);
     fclose(fp2);
-    printf("ok\n");
     return 0;
 }
 
@@ -79,7 +78,6 @@ int run_parent(struct fj_config *config, int child_pid)
     char err_msg[1024] = {0};
     if (WIFEXITED(s))
     {
-        printf("exit normally code: %d.\n", WEXITSTATUS(s));
         int child_exit_code = WEXITSTATUS(s);
         if (child_exit_code != 0) {
             err_code = ERR_CHILD_EXIT_NONZERO;
@@ -113,7 +111,6 @@ int run_parent(struct fj_config *config, int child_pid)
     }
 
     // check answer if need
-    printf("%s", config->answer_file);
     if (strlen(config->answer_file) > 0) {
         if (compare_files(config->answer_file, config->output_file) != 0) {
             err_code = ERR_WRONG_ANSWER;
