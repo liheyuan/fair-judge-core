@@ -23,7 +23,7 @@ int parse_config(int argc, char **argv, struct fj_config *config)
     int opt;
     opterr = 0;
 
-    while ((opt = getopt(argc, argv, "t:m:f:p:c:o:i:")) != EOF)
+    while ((opt = getopt(argc, argv, "t:m:f:p:c:o:i:a:")) != EOF)
     {
         switch (opt)
         {
@@ -47,6 +47,9 @@ int parse_config(int argc, char **argv, struct fj_config *config)
             break;
         case 'i':
             strncpy(config->input_file, optarg, MAX_STR_LEN - 1);
+            break;
+        case 'a':
+            strncpy(config->answer_file, optarg, MAX_STR_LEN - 1);
             break;
         default:
             break;

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <signal.h>
 #include <pthread.h>
 #include <limits.h>
@@ -24,6 +25,32 @@ void timeout_killer(struct fj_timeout_args *args)
     if(kill(args->pid, SIGKILL) != 0) {
         return;
     }
+}
+
+int compare_files(char *file1, char * file2) {
+    FILE *fp1 = fopen(file1, "r");
+    FILE *fp2 = fopen(file2, "r");
+    if (fp1 == NULL || fp2 == NULL) {
+        return -1;
+    }
+    char buf1[MAX_STR_LEN];
+    char buf2[MAX_STR_LEN];
+    while (fgets(buf1, MAX_STR_LEN, fp1) != NULL && fgets(buf2, MAX_STR_LEN, fp2) != NULL) {
+        if (strcmp(buf1, buf2) != 0) {
+            fclose(fp1);
+            fclose(fp2);
+            return -1;
+        }
+    }
+    if (fgets(buf1, MAX_STR_LEN, fp1) != NULL || fgets(buf2, MAX_STR_LEN, fp2) != NULL) {
+        fclose(fp1);
+        fclose(fp2);
+        return -1;
+    }
+    fclose(fp1);
+    fclose(fp2);
+    printf("ok\n");
+    return 0;
 }
 
 
@@ -82,6 +109,15 @@ int run_parent(struct fj_config *config, int child_pid)
             err_code = ERR_UNKNOWN_SIGNAL;
             snprintf(err_msg, MAX_ERR_MSG, "child process exit with unknown signal %d", sig);
             break;
+        }
+    }
+
+    // check answer if need
+    printf("%s", config->answer_file);
+    if (strlen(config->answer_file) > 0) {
+        if (compare_files(config->answer_file, config->output_file) != 0) {
+            err_code = ERR_WRONG_ANSWER;
+            snprintf(err_msg, MAX_ERR_MSG, "wrong answer");
         }
     }
 

@@ -34,6 +34,7 @@ struct fj_timeout_args
 #define ERR_MEMORY_LIMIT_EXCEED 103;
 #define ERR_TIME_LIMIT_EXCEED 104;
 #define ERR_UNKNOWN_SIGNAL 105;
+#define ERR_WRONG_ANSWER 106;
 
 
 
