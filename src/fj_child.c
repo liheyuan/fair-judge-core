@@ -24,7 +24,7 @@ int set_limit(struct fj_config* config)
     getrlimit(RLIMIT_FSIZE, &fLimit);
 
     // set cpu time limit (will SIGKILL(9) if exceed)
-    tLimit.rlim_cur = tLimit.rlim_max = config->cpu_time_limit_sec; // only works if cpu 100% run for x seconds
+    tLimit.rlim_cur = tLimit.rlim_max = config->time_limit_sec; // only works if cpu 100% run for x seconds
     if (setrlimit(RLIMIT_CPU, &tLimit) != 0)
     {
         printf("set time limit fail\n");

@@ -20,7 +20,7 @@ void timeout_killer(struct fj_timeout_args *args)
         return;
     }
     // sleep for timeout + 1 seconds
-    sleep(args->timeout + 1);
+    sleep(args->timeout);
     if(kill(args->pid, SIGKILL) != 0) {
         return;
     }
@@ -35,7 +35,7 @@ int run_parent(struct fj_config *config, int child_pid)
 
     // create a thread to monitor child process , after realTimeLimitSec, kill child process
     pthread_t tid;
-    struct fj_timeout_args kill_arg = {child_pid, config->real_time_limit_sec};
+    struct fj_timeout_args kill_arg = {child_pid, config->time_limit_sec};
     pthread_create(&tid, NULL, (void *)timeout_killer, (void *)&kill_arg);
     pthread_detach(tid);
 
