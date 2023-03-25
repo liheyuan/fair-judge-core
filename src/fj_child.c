@@ -24,21 +24,21 @@ int set_limit(struct fj_config* config)
     getrlimit(RLIMIT_FSIZE, &fLimit);
 
     // set cpu time limit (will SIGKILL(9) if exceed)
-    tLimit.rlim_cur = tLimit.rlim_max = config->cpuTimeLimitSec; // only works if cpu 100% run for x seconds
+    tLimit.rlim_cur = tLimit.rlim_max = config->cpu_time_limit_sec; // only works if cpu 100% run for x seconds
     if (setrlimit(RLIMIT_CPU, &tLimit) != 0)
     {
         printf("set time limit fail\n");
         return EXIT_SET_LIMIT_FAIL;
     }
     // set memory limit (will SIGSEGV(11) if exceed
-    mLimit.rlim_cur = mLimit.rlim_max = config->ramLimitMB * 1024 * 1024;
+    mLimit.rlim_cur = mLimit.rlim_max = config->ram_limit_mb * 1024 * 1024;
     if (setrlimit(RLIMIT_AS, &mLimit) != 0)
     {
         printf("set memory limit fail\n");
         return EXIT_SET_LIMIT_FAIL;
     }
     // set file size limit (will SIGXFSZ(25) if exceed)
-    fLimit.rlim_cur = config->fileLimitMB * 1024 * 1024;
+    fLimit.rlim_cur = config->file_limit_mb * 1024 * 1024;
     if (setrlimit(RLIMIT_FSIZE, &fLimit) == -1)
     {
         printf("set file size limit fail\n");
@@ -50,7 +50,7 @@ int set_limit(struct fj_config* config)
 int redirect_io(struct fj_config* config)
 {
     // redirect inputFile to stdin
-    FILE *fpIn = fopen(config->inputFile, "r");
+    FILE *fpIn = fopen(config->input_file, "r");
     if (fpIn == NULL)
     {
         return EXIT_REDIRECT_FAIL;
@@ -61,7 +61,7 @@ int redirect_io(struct fj_config* config)
     }
 
     // redirect stdout to outputFile
-    FILE *fpOut = fopen(config->outputFile, "w");
+    FILE *fpOut = fopen(config->output_file, "w");
     if (fpOut == NULL)
     {
         return EXIT_REDIRECT_FAIL;
@@ -72,6 +72,23 @@ int redirect_io(struct fj_config* config)
     }
     return 0;
 }
+
+#define MAX_SPLIT 128
+char** split_args(char* str)
+{
+    char** result = malloc(sizeof(char*) * MAX_SPLIT);
+    int i = 0;
+    char* token = strtok(str, " \t");
+    while (token != NULL)
+    {
+        result[i] = token;
+        i++;
+        token = strtok(NULL, " \t");
+    }
+    result[i] = NULL;
+    return result;
+}
+
 
 int run_child(struct fj_config *config)
 {
@@ -89,20 +106,9 @@ int run_child(struct fj_config *config)
         return ret;
     }
 
-    // run command
+    char** args = split_args(config->exec_args);
 
-    // test for cpu timeout
-    // if (execl("/usr/bin/yes", "yes", NULL) < 0) {
-    //     printf("execl fail: %s\n", strerror(errno));
-    //     return EXIT_EXEC_FAIL;
-    // }
-    // test for real timeout
-    // if (execl("/usr/bin/sleep", "sleep", "9",NULL) < 0) {
-    //     printf("execl fail: %s\n", strerror(errno));
-    //     return EXIT_EXEC_FAIL;
-    // }
-    // test for input / output
-    if (execl("/usr/bin/cat", "cat", NULL) < 0)
+    if (execv(config->exec_path, args) < 0)
     {
         printf("execl fail: %s\n", strerror(errno));
         return EXIT_EXEC_FAIL;

@@ -1,13 +1,18 @@
 #ifndef FJ_COMMON_H
 #define FJ_COMMON_H
 
+#define MAX_STR 1024
+
 struct fj_config {
-    int cpuTimeLimitSec;
-    int realTimeLimitSec;
-    int ramLimitMB;
-    int fileLimitMB;
-    char* inputFile;
-    char* outputFile;
+    int cpu_time_limit_sec;
+    int real_time_limit_sec;
+    int ram_limit_mb;
+    int file_limit_mb;
+
+    char exec_path[MAX_STR];
+    char exec_args[MAX_STR];
+    char input_file[MAX_STR];
+    char output_file[MAX_STR];
 };
 
 struct fj_timeout_args

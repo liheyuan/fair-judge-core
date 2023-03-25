@@ -35,7 +35,7 @@ int run_parent(struct fj_config *config, int child_pid)
 
     // create a thread to monitor child process , after realTimeLimitSec, kill child process
     pthread_t tid;
-    struct fj_timeout_args kill_arg = {child_pid, config->realTimeLimitSec};
+    struct fj_timeout_args kill_arg = {child_pid, config->real_time_limit_sec};
     pthread_create(&tid, NULL, (void *)timeout_killer, (void *)&kill_arg);
     pthread_detach(tid);
 
