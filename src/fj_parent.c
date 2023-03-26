@@ -33,23 +33,44 @@ int compare_files(char *file1, char * file2) {
     if (fp1 == NULL || fp2 == NULL) {
         return -1;
     }
-    char buf1[MAX_STR_LEN];
-    char buf2[MAX_STR_LEN];
-    while (fgets(buf1, MAX_STR_LEN, fp1) != NULL && fgets(buf2, MAX_STR_LEN, fp2) != NULL) {
-        if (strcmp(buf1, buf2) != 0) {
+    char c1, c2;
+    while (1) {
+        c1 = fgetc(fp1);
+        c2 = fgetc(fp2);
+        if (c1 == EOF && c2 == EOF) {
+            fclose(fp1);
+            fclose(fp2);
+            return 0;
+        }
+        if (c1 != c2) {
             fclose(fp1);
             fclose(fp2);
             return -2;
         }
     }
-    if (fgets(buf1, MAX_STR_LEN, fp1) != NULL || fgets(buf2, MAX_STR_LEN, fp2) != NULL) {
-        fclose(fp1);
-        fclose(fp2);
-        return -2;
+}
+
+int compare_files_ignore_space(char *file1, char * file2) {
+    FILE *fp1 = fopen(file1, "r");
+    FILE *fp2 = fopen(file2, "r");
+    if (fp1 == NULL || fp2 == NULL) {
+        return -1;
     }
-    fclose(fp1);
-    fclose(fp2);
-    return 0;
+    char c1, c2;
+    while (1) {
+        while ((c1 = fgetc(fp1)) == ' ' || c1 == '\t' || c1 == '\r' || c1 == '\n');
+        while ((c2 = fgetc(fp2)) == ' ' || c2 == '\t' || c2 == '\r' || c2 == '\n');
+        if (c1 == EOF && c2 == EOF) {
+            fclose(fp1);
+            fclose(fp2);
+            return 0;
+        }
+        if (c1 != c2) {
+            fclose(fp1);
+            fclose(fp2);
+            return -2;
+        }
+    }
 }
 
 int run_parent(struct fj_config *config, int child_pid)
@@ -74,7 +95,7 @@ int run_parent(struct fj_config *config, int child_pid)
 
     // check child process exit status
     int err_code = ERR_OK;
-    char err_msg[1024] = {0};
+    char err_msg[1024] = "accepted";
     if (WIFEXITED(s))
     {
         int child_exit_code = WEXITSTATUS(s);
@@ -88,7 +109,7 @@ int run_parent(struct fj_config *config, int child_pid)
         err_code = ERR_CHILD_EXIT_ABNORMALLY;
         snprintf(err_msg, MAX_ERR_MSG, "child process exit abnormally");
     }
-    if (WIFSIGNALED(s))
+    if (err_code == ERR_OK && WIFSIGNALED(s))
     {
         int sig = WTERMSIG(s);
         
@@ -109,11 +130,16 @@ int run_parent(struct fj_config *config, int child_pid)
         }
     }
 
-    // check answer if need
-    if (strlen(config->answer_file) > 0) {
+    // check answer if give answer file and not error yet
+    if (strlen(config->answer_file) > 0 && err_code == ERR_OK) {
         if (compare_files(config->answer_file, config->output_file) != 0) {
-            err_code = ERR_WRONG_ANSWER;
-            snprintf(err_msg, MAX_ERR_MSG, "wrong answer");
+            if (compare_files_ignore_space(config->answer_file, config->output_file) != 0) {
+                err_code = ERR_WRONG_ANSWER;
+                snprintf(err_msg, MAX_ERR_MSG, "wrong answer");
+            } else {
+                err_code = ERR_PRESENTATION_ERROR;
+                snprintf(err_msg, MAX_ERR_MSG, "may be presentation problem");
+            }
         }
     }
 
@@ -123,6 +149,6 @@ int run_parent(struct fj_config *config, int child_pid)
     double childCpuTimeInMs = (usage.ru_utime.tv_sec + usage.ru_stime.tv_sec) * 1000 + (float)(usage.ru_stime.tv_usec + usage.ru_utime.tv_usec) / 1000;
 
     printf("{\"cpu_time_ms\": %ld, \"real_time_ms\": %ld, \"memory_kb\": %ld, \"err_code\": %d, \"err_msg\": \"%s\"}\n", 
-    (long)childCpuTimeInMs, (long)childRealTimeInMs, usage.ru_maxrss, err_code, err_msg);
+    (long)childCpuTimeInMs, (long)childRealTimeInMs, err_code == ERR_MEMORY_LIMIT_EXCEED ? config->ram_limit_mb * 1024 * 1024 : usage.ru_maxrss, err_code, err_msg);
     return 0;
 }
