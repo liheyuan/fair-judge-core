@@ -123,6 +123,9 @@ int run_parent(struct fj_config *config, int child_pid)
             err_code = ERR_MEMORY_LIMIT_EXCEED;
             snprintf(err_msg, MAX_ERR_MSG, "child process memory limit exceed");
             break;
+        case SIGSYS:
+            err_code = ERR_SYSTEM_CALL;
+            snprintf(err_msg, MAX_ERR_MSG, "child process use syscall error");
         default:
             err_code = ERR_UNKNOWN_SIGNAL;
             snprintf(err_msg, MAX_ERR_MSG, "child process exit with unknown signal %d", sig);

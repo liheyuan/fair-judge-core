@@ -11,7 +11,7 @@
 void print_usage() {
     printf("Usage:\n");
     printf("fjcore -p <abs_path_bin> -c <bin_full_cmd> -i <input_file> -o <output_file> -a <answer_file, skip check if not provided>");
-    printf("-t <time_limit_sec, default 1> -m <mem_limit_mb, default 8> -f <file_limit_mb, default 16>\n\n");
+    printf("-t <time_limit_sec, default 1> -m <mem_limit_mb, default 8> -f <file_limit_mb, default 16> -s <limit_sys_call, default 1>\n");
 }
 
 int parse_config(int argc, char **argv, struct fj_config *config)
@@ -20,7 +20,7 @@ int parse_config(int argc, char **argv, struct fj_config *config)
     int opt;
     opterr = 0;
 
-    while ((opt = getopt(argc, argv, "t:m:f:p:c:o:i:a:")) != EOF)
+    while ((opt = getopt(argc, argv, "t:m:f:p:c:o:i:a:s:")) != EOF)
     {
         switch (opt)
         {
@@ -47,6 +47,9 @@ int parse_config(int argc, char **argv, struct fj_config *config)
             break;
         case 'a':
             strncpy(config->answer_file, optarg, MAX_STR_LEN - 1);
+            break;
+        case 's':
+            config->syscall_limit = atoi(optarg);
             break;
         default:
             break;
@@ -81,6 +84,7 @@ int main(int argc, char **argv)
         .time_limit_sec = 1,
         .ram_limit_mb = 8,
         .file_limit_mb = 128,
+        .syscall_limit = 1,
         .exec_path = "",
         .exec_args = "",
         .input_file = "",

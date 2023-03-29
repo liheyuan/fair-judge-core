@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <seccomp.h>
 
 
 #include "fj_child.h"
@@ -89,6 +90,42 @@ char** split_args(char* str)
     return result;
 }
 
+int set_sys_call_limit(char * exec_path) {
+    // scmp allow fork only
+    scmp_filter_ctx ctx = NULL;
+    if (!(ctx = seccomp_init(SCMP_ACT_ALLOW))) {
+        return -1;
+    }
+
+    // disable execve except for target exec path
+    if (seccomp_rule_add(ctx, SCMP_ACT_KILL, SCMP_SYS(execve), 1,
+      SCMP_A0(SCMP_CMP_NE, (scmp_datum_t) exec_path)) < 0) {
+      return -2;
+    }
+
+    // disable blacklist sys call
+    int blacklist_sys_calls[] = {
+                                SCMP_SYS(clone), SCMP_SYS(fork),
+                                SCMP_SYS(vfork), SCMP_SYS(kill)};
+
+    int blacklist_sys_calls_len = sizeof(blacklist_sys_calls) / sizeof(int);
+    for (int i = 0; i < blacklist_sys_calls_len; i++) {
+        if (seccomp_rule_add(ctx, SCMP_ACT_KILL, blacklist_sys_calls[i], 0) != 0) {
+            return -3;
+        }
+    }
+
+    // load
+    if (seccomp_load(ctx) < 0) {
+        return -4;
+    }
+
+    seccomp_release(ctx);
+
+    return 0;
+
+}
+
 
 int run_child(struct fj_config *config)
 {
@@ -104,6 +141,13 @@ int run_child(struct fj_config *config)
     if (ret != 0)
     {
         return ret;
+    }
+
+    // set sys call limit
+    if (config->syscall_limit) {
+        if(set_sys_call_limit(config->exec_path) != 0) {
+            return EXIT_SET_SEC_FAIL;
+        }
     }
 
     char** args = split_args(config->exec_args);

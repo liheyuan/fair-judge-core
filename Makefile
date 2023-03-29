@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -g -O2 -pthread
-LDFLAGS = -lpthread
+LDFLAGS = -lpthread -lseccomp
 TARGET = fjcore
 SRCS = $(wildcard src/*.c)
 OBJS = $(SRCS:.c=.o)

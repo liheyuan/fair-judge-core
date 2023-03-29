@@ -1,6 +1,12 @@
 # Fair Judge Core
 An lightweight OJ Core that runs under Linux
 
+## Build
+```
+sudo apt-get install -y libseccomp-dev
+
+```
+
 ## Usage
 ```
 fjcore -p <abs_path_bin> -c <bin_full_cmd> -i <input_file> -o <output_file> -a <answer_file, skip check if not provided>-t <time_limit_sec, default 1> -m <mem_limit_mb, default 8> -f <file_limit_mb, default 16>
