@@ -14,30 +14,34 @@ fjcore -p <abs_path_bin> -c <bin_full_cmd> -i <input_file> -o <output_file> -a <
 
 ## Example
 Note: You should create 3 files with same content before run the following example: input.txt, output.txt, answer.txt
-* Correct / Accepted / AC
+### Correct / Accepted / AC
 ```
 fjcore -p /usr/bin/cat -c "cat" -i ./input.txt -o ./output.txt -a ./answer.txt
 ```
-* Wrong Answer / WA
+### Wrong Answer / WA
 ```
 fjcore -p /usr/bin/sleep -c "sleep 1" -i ./input.txt -o ./output.txt -a ./answer.txt -t 2
-* Presentation Error / PE (add an extra line to the end of file of answer.txt)
+```
+### Presentation Error / PE (add an extra line to the end of file of answer.txt)
 ```
 fjcore -p /usr/bin/cat -c "cat" -i ./input.txt -o ./output.txt -a ./answer.txt -t 2
 ```
-* Time Limit Exceed / TLE
+### Time Limit Exceed / TLE
 ```
 fjcore -p /usr/bin/sleep -c "sleep 2" -i ./input.txt -o ./output.txt ### memory_kb not show?-a ./answer.txt
 ```
-* Memory Limit Exceed / MLE (need a test file that allow more memory than 16mb)
+### Memory Limit Exceed / MLE (need a test file that allow more memory than 16mb)
 ```
 fjcore -p ./32mb.bin -c "32mb.bin" -i ./input.txt -o ./output.txt -a ./answer.txt -m 16
 ```
-* Run Java
+### Run Java
 ```
-fjcore -p /usr/bin/java -c "java Main" -i ./input.txt -o ./output.txt -a ./answer.txt
+fjcore -p /usr/bin/java -c "java -Xms32m -Xmx32m Main" -m 2048 -i ./input.txt -o ./output.txt
 ```
-
+### Run Python
+```
+fjcore -p /usr/bin/python3 -c "python3 main.py" -m 128 -i ./input.txt -o ./output.txt
+```
 ## FAQ
 ### Check Priority
 ERR_CHILD_EXIT_NONZERO > ERR_CHILD_EXIT_ABNORMALLY > TLE , MLE > WA , PE
