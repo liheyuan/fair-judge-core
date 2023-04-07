@@ -33,6 +33,10 @@ fjcore -p /usr/bin/sleep -c "sleep 2" -i ./input.txt -o ./output.txt ### memory_
 ```
 fjcore -p ./32mb.bin -c "32mb.bin" -i ./input.txt -o ./output.txt -a ./answer.txt -m 16
 ```
+* Run Java
+```
+fjcore -p /usr/bin/java -c "java Main" -i ./input.txt -o ./output.txt -a ./answer.txt
+```
 
 ## FAQ
 ### Check Priority
